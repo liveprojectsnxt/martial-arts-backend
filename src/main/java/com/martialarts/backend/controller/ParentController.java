@@ -29,37 +29,37 @@ public class ParentController {
     @Autowired
     private OtpService otpService;
     
-    @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestParam String mobile, @RequestParam String otp) {
-        
-        // Verify OTP
-        if (!otpService.validateOtp(mobile, otp)) {
-            return ResponseEntity.badRequest().body("Invalid or Expired OTP!");
-        }
-        
-        // Get parent details
-        AuthorizedUser parent = studentService.parentLogin(mobile);
-        
-        // Get all students for this parent
-        List<ParentStudentMapping> mappings = studentService.getStudentsByParentMobile(mobile);
-        
-        List<Map<String, Object>> students = mappings.stream().map(mapping -> {
-            Student s = studentRepo.findById(mapping.getStudentId()).orElse(null);
-            Map<String, Object> studentMap = new HashMap<>();
-            studentMap.put("id", mapping.getStudentId());
-            studentMap.put("name", mapping.getStudentName());
-            studentMap.put("status", mapping.getStudentStatus());
-            if (s != null) {
-                studentMap.put("photoPath", s.getPhotoPath());
-                studentMap.put("admissionDate", s.getCreatedAt());
-            }
-            return studentMap;
-        }).collect(Collectors.toList());
-        
-        Map<String, Object> response = new HashMap<>();
-        response.put("parent", parent);
-        response.put("students", students);
-        
-        return ResponseEntity.ok(response);
-    }
+//    @PostMapping("/login")
+//    public ResponseEntity<?> login(@RequestParam String mobile, @RequestParam String otp) {
+//        
+//        // Verify OTP
+//        if (!otpService.validateOtp(mobile, otp)) {
+//            return ResponseEntity.badRequest().body("Invalid or Expired OTP!");
+//        }
+//        
+//        // Get parent details
+//        AuthorizedUser parent = studentService.parentLogin(mobile);
+//        
+//        // Get all students for this parent
+//        List<ParentStudentMapping> mappings = studentService.getStudentsByParentMobile(mobile);
+//        
+//        List<Map<String, Object>> students = mappings.stream().map(mapping -> {
+//            Student s = studentRepo.findById(mapping.getStudentId()).orElse(null);
+//            Map<String, Object> studentMap = new HashMap<>();
+//            studentMap.put("id", mapping.getStudentId());
+//            studentMap.put("name", mapping.getStudentName());
+//            studentMap.put("status", mapping.getStudentStatus());
+//            if (s != null) {
+//                studentMap.put("photoPath", s.getPhotoPath());
+//                studentMap.put("admissionDate", s.getCreatedAt());
+//            }
+//            return studentMap;
+//        }).collect(Collectors.toList());
+//        
+//        Map<String, Object> response = new HashMap<>();
+//        response.put("parent", parent);
+//        response.put("students", students);
+//        
+//        return ResponseEntity.ok(response);
+//    }
 }
