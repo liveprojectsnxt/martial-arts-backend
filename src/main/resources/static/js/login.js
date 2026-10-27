@@ -186,19 +186,26 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             } 
             // 🎯 CASE 3: ADMIN / STAFF LOGIN (Existing Auth Controller Call Preserved)
-            else {
-                const payload = { mobile: mobile, otp: otp };
+			// CASE 3: ADMIN / STAFF LOGIN
+			else {
+			    const params = new URLSearchParams();
+			    params.append('mobile', mobile);
+			    params.append('otp', otp);
+			    params.append('role', role);
 
-                response = await fetch('/api/auth/verify-login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
+			    response = await fetch('/api/otp/verify-login', {
+			        method: 'POST',
+			        headers: {
+			            'Content-Type': 'application/x-www-form-urlencoded'
+			        },
+			        credentials: 'same-origin',
+			        body: params
+			    });
 
-                if (response.ok) {
-                    userData = await response.json();
-                }
-            }
+			    if (response.ok) {
+			        userData = await response.json();
+			    }
+			}
 
             if (response && response.ok && userData) {
                 showNotification('Login successful! Redirecting...', true);

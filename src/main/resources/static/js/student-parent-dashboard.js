@@ -78,6 +78,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 	                rejectAlert.classList.add('d-none');
 	                loadFeeLedger(activeStudent.id);
 	                loadPaymentHistory(activeStudent.id);
+					loadStudentAttendanceHistory(activeStudent.id);
 	            } else if (activeStudent.status === 'REJECTED') {
 	                feeSection.classList.add('d-none');
 	                rejectAlert.classList.remove('d-none');
@@ -370,4 +371,103 @@ document.addEventListener('DOMContentLoaded', async () => {
         sessionStorage.clear();
         window.location.href = '/login';
     });
+	
+	
+	// ==========================================
+	    // STUDENT ATTENDANCE & HISTORY
+	    // ==========================================
+	    const studentBatchSelect = document.getElementById('studentBatchSelect');
+	    const btnStudentCheckIn = document.getElementById('btnStudentCheckIn');
+
+	    // 1. Load Batches
+	    async function loadStudentBatches() {
+	        try {
+	            const res = await fetch('/api/attendance/batches');
+	            if (res.ok) {
+	                const batches = await res.json();
+	                studentBatchSelect.innerHTML = batches.map(b => 
+	                    `<option value="${b.id}">${b.name} (${b.startTime} - ${b.endTime})</option>`
+	                ).join('');
+	            }
+	        } catch (e) {
+	            console.error('Batch load error:', e);
+	        }
+	    }
+	    loadStudentBatches();
+
+	    // 2. Student Self Check-in Trigger
+	    if (btnStudentCheckIn) {
+	        btnStudentCheckIn.addEventListener('click', async () => {
+	            if (!activeStudent || !activeStudent.id) {
+	                alert('No active student profile loaded.');
+	                return;
+	            }
+	            const batchId = studentBatchSelect.value;
+	            if (!batchId) {
+	                alert('Please select a batch.');
+	                return;
+	            }
+
+	            btnStudentCheckIn.disabled = true;
+	            btnStudentCheckIn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Submitting...';
+
+	            try {
+	                const res = await fetch(`/api/attendance/student/check-in?studentId=${activeStudent.id}&batchId=${batchId}`, {
+	                    method: 'POST'
+	                });
+	                const data = await res.json();
+	                alert(data.message);
+	                loadStudentAttendanceHistory(activeStudent.id);
+	            } catch (e) {
+	                alert('Failed to submit check-in request.');
+	            } finally {
+	                btnStudentCheckIn.disabled = false;
+	                btnStudentCheckIn.innerHTML = '<i class="bi bi-fingerprint"></i> Mark Today\'s Check-In';
+	            }
+	        });
+	    }
+
+	    // 3. Load Student Attendance History
+	    async function loadStudentAttendanceHistory(studentId) {
+	        const body = document.getElementById('studentAttendanceHistoryBody');
+	        if (!body) return;
+
+	        try {
+	            const res = await fetch(`/api/attendance/history/${studentId}`);
+	            if (!res.ok) throw new Error('Failed to fetch history');
+
+	            const history = await res.json();
+	            if (!history.length) {
+	                body.innerHTML = '<tr><td colspan="5" class="text-center py-3 text-muted">No attendance logged yet.</td></tr>';
+	                return;
+	            }
+
+	            body.innerHTML = history.map(h => {
+	                const dateStr = h.attendanceDate || '--';
+	                const timeStr = h.checkInTime ? h.checkInTime.substring(11, 16) : '--:--';
+	                
+	                let badge = '<span class="badge bg-warning text-dark">PENDING</span>';
+	                if (h.status === 'PRESENT') badge = '<span class="badge bg-success">PRESENT</span>';
+	                else if (h.status === 'LATE') badge = '<span class="badge bg-info text-dark">LATE</span>';
+	                else if (h.status === 'REJECTED') badge = '<span class="badge bg-danger">REJECTED</span>';
+	                else if (h.status === 'EXCUSED') badge = '<span class="badge bg-secondary">EXCUSED</span>';
+
+	                return `
+	                    <tr>
+	                        <td class="fw-bold">${dateStr}</td>
+	                        <td>${timeStr}</td>
+	                        <td>${badge}</td>
+	                        <td><small class="badge bg-light text-dark border">${h.entryMode}</small></td>
+	                        <td><small class="text-muted">${h.remarks || '--'}</small></td>
+	                    </tr>
+	                `;
+	            }).join('');
+
+	        } catch (e) {
+	            body.innerHTML = '<tr><td colspan="5" class="text-center py-3 text-danger">Error loading history.</td></tr>';
+	        }
+	    }
+
+	    // loadSelectedStudentDetails() me fee ledger ke sath ise call karein:
+	    // loadStudentAttendanceHistory(activeStudent.id);
 });

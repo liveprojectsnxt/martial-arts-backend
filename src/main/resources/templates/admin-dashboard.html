@@ -122,6 +122,12 @@
 			        <i class="bi bi-clock-history"></i> Payment Audit Trail
 			    </button>
 			</li>
+			
+			<li class="nav-item">
+			    <button class="nav-link text-dark fw-bold" id="tab-attendance-management" data-bs-toggle="pill" data-bs-target="#content-attendance-management" type="button">
+			        <i class="bi bi-calendar-check-fill text-warning"></i> Attendance Roster & History
+			    </button>
+			</li>
             
         </ul>
 
@@ -251,6 +257,56 @@
                     </div>
                 </div>
             </div>
+            
+            <!-- ================= ATTENDANCE MANAGEMENT TAB ================= -->
+<div class="tab-pane fade" id="content-attendance-management" role="tabpanel">
+    <div class="card border-0 shadow-sm rounded-3 mb-4">
+        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+                <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-person-check-fill text-warning me-1"></i> Class Attendance Roster</h6>
+                <small class="text-muted">Review student check-ins, approve/reject, or mark retro/manual attendance.</small>
+            </div>
+            <button class="btn btn-warning btn-sm fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#teacherManualAttendanceModal">
+                <i class="bi bi-pencil-square"></i> Mark Manual / Past Attendance
+            </button>
+        </div>
+        <div class="card-body bg-light border-bottom">
+            <div class="row g-2 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label small fw-bold">Select Batch *</label>
+                    <select class="form-select form-select-sm fw-bold" id="attBatchSelect"></select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small fw-bold">Attendance Date *</label>
+                    <input type="date" class="form-control form-control-sm" id="attDateSelect">
+                </div>
+                <div class="col-md-3">
+                    <button class="btn btn-dark btn-sm fw-bold w-100" id="btnLoadRoster">
+                        <i class="bi bi-search"></i> Load Daily Roster
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-dark small">
+                    <tr>
+                        <th>Student Details</th>
+                        <th>Status</th>
+                        <th>Check-In Time</th>
+                        <th>Entry Mode</th>
+                        <th>Remarks / Audit Reason</th>
+                        <th>Reviewed By</th>
+                        <th class="text-center" style="min-width: 220px;">Teacher Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="attendanceRosterBody">
+                    <tr><td colspan="7" class="text-center py-4 text-muted">Select Batch and Date, then click "Load Daily Roster".</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
         </div>
     </main>
 
@@ -691,6 +747,88 @@
                     <tr><td colspan="8" class="text-center py-4 text-muted">Loading audit records...</td></tr>
                 </tbody>
             </table>
+        </div>
+    </div>
+</div>
+
+<!-- Teacher Manual / Retro Attendance Modal -->
+<!-- ================= MODAL: MARK MANUAL / PAST ATTENDANCE ================= -->
+<div class="modal fade" id="teacherManualAttendanceModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-dark text-white">
+                <h6 class="modal-title fw-bold"><i class="bi bi-calendar-plus text-warning me-2"></i> Mark Manual / Past Attendance</h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form id="manualAttendanceForm">
+                    <!-- 1. केवल Approved स्टूडेंट्स दिखेंगे -->
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Select Approved Student *</label>
+                        <select class="form-select fw-bold" id="manStudentSelect" required>
+                            <option value="">-- Loading Active Students... --</option>
+                        </select>
+                    </div>
+
+                    <!-- 2. बैच ड्रॉपडाउन (Morning / Evening) -->
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Batch *</label>
+                        <select class="form-select fw-bold" id="manBatchSelect" required>
+                            <option value="">-- Loading Batches... --</option>
+                        </select>
+                    </div>
+
+                    <!-- 3. तारीख -->
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Target Date *</label>
+                        <input type="date" class="form-control" id="manTargetDate" required>
+                    </div>
+
+                    <!-- 4. स्टेटस -->
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Attendance Status *</label>
+                        <select class="form-select fw-bold" id="manStatus" required>
+                            <option value="PRESENT" selected>🟢 PRESENT (On Time)</option>
+                            <option value="LATE">🟡 LATE (विलंब से आया)</option>
+                            <option value="ABSENT">🔴 ABSENT (अनुपस्थित)</option>
+                            <option value="EXCUSED">⚪ EXCUSED (Leave / Sick)</option>
+                        </select>
+                    </div>
+
+                    <!-- 5. Check-In & Check-Out Times (दोनों टाइम भरने का विकल्प) -->
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="form-label small fw-bold">Check-In Time</label>
+                            <input type="time" class="form-control" id="manCheckIn">
+                            <small class="text-muted" style="font-size: 0.72rem;">Arrival at Dojo</small>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-bold">Check-Out Time</label>
+                            <input type="time" class="form-control" id="manCheckOut">
+                            <small class="text-muted" style="font-size: 0.72rem;">Class Departure</small>
+                        </div>
+                    </div>
+
+                    <!-- 6. अगर LATE चुना तो लेट का विवरण / रीज़न -->
+                    <div class="mb-3 d-none" id="lateDetailsWrapper">
+                        <div class="alert alert-warning py-2 px-3 small mb-0">
+                            <i class="bi bi-clock-history me-1"></i> Student marked as <strong>LATE</strong>. Ensure exact Check-In time is specified above.
+                        </div>
+                    </div>
+
+                    <!-- 7. ऑडिट रीज़न / रिमार्क्स -->
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Audit Reason / Remarks *</label>
+                        <input type="text" class="form-control" id="manReason" placeholder="e.g. Attended regular evening training / Late due to school bus" required>
+                    </div>
+
+                    <div class="d-grid mt-4">
+                        <button type="submit" id="btnSubmitManualAtt" class="btn btn-warning fw-bold py-2 shadow-sm">
+                            <i class="bi bi-check2-circle"></i> Save Attendance Record
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 </div>

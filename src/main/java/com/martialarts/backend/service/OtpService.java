@@ -41,12 +41,19 @@ public class OtpService {
     private final Map<String, OtpData> otpStorage = new ConcurrentHashMap<>();
 
     public String generateOtp(String mobile) {
+        if (mobile == null || mobile.trim().isEmpty()) {
+            throw new IllegalArgumentException("Mobile number is required");
+        }
+
+        String cleanMobile = mobile.trim();
+
         SecureRandom random = new SecureRandom();
         int num = 100000 + random.nextInt(900000);
         String otp = String.valueOf(num);
 
         LocalDateTime expiry = LocalDateTime.now().plusMinutes(3);
-        otpStorage.put(mobile, new OtpData(otp, expiry));
+
+        otpStorage.put(cleanMobile, new OtpData(otp, expiry));
 
         return otp;
     }
@@ -56,18 +63,22 @@ public class OtpService {
             return false;
         }
 
-        OtpData data = otpStorage.get(mobile);
-        if (data == null) {
-            return false; 
-        }
+        String cleanMobile = mobile.trim();
+        String cleanOtp = userOtp.trim();
 
-        if (LocalDateTime.now().isAfter(data.getExpiryTime())) {
-            otpStorage.remove(mobile); 
+        OtpData data = otpStorage.get(cleanMobile);
+
+        if (data == null) {
             return false;
         }
 
-        if (data.getOtp().equals(userOtp.trim())) {
-            otpStorage.remove(mobile); 
+        if (LocalDateTime.now().isAfter(data.getExpiryTime())) {
+            otpStorage.remove(cleanMobile, data);
+            return false;
+        }
+
+        if (data.getOtp().equals(cleanOtp)) {
+            otpStorage.remove(cleanMobile, data);
             return true;
         }
 
